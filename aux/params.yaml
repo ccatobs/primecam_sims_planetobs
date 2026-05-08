@@ -1,0 +1,35 @@
+- --site-lat
+- '-22.9855235'
+- --site-lon
+- '-67.7403087'
+- --site-alt
+- '5610'
+- --site-name
+- Cerro-Chajnantor
+- --telescope
+- FYST
+- --patch-coord
+- C
+- --start
+- '2026-05-01 00:00:00'
+- --stop
+- '2026-05-05 23:00:00'
+- --patch
+- Mars,SSO,1,2
+- --el-min-deg
+- '40'
+- --el-max-deg
+- '65'
+- --sun-avoidance-angle-deg
+- '35'
+- --ces-max-time-s
+- '900'
+- --fp-radius-deg
+- '0.0'
+- --gap-s
+- '0.0'
+- --gap-small-s
+- '0.0'
+- --no-partial-scans
+- --out
+- ./gen_schedules/schedule_Mars.txt

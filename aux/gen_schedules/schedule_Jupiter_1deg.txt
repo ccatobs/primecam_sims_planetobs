@@ -1,0 +1,5 @@
+#Site           Telescope        Latitude [deg] Longitude [deg]   Elevation [m]
+Cerro-Chajnantor FYST                    -22.986         -67.740          5610.0
+#     Start time UTC        Stop time UTC Rotation Patch name                            Az min   Az max       El  Pass Sub
+ 2026-10-01 11:10:00  2026-10-01 11:24:00     0.00 Jupiter                                39.26    43.30    41.07     0   0
+ 2026-10-01 11:24:00  2026-10-01 11:39:00     0.00 Jupiter                                35.19    39.76    43.19     1   0

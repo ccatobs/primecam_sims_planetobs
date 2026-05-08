@@ -1,16 +1,8 @@
-# primecam_sims
-## Simulations for PrimeCam large fields: Timestream data and Mapmaking
+# primecam_sims_planetobs
+## Simulations for PrimeCam Planet Observations: Timestream data and Mapmaking
 
 Note: High memory usage expected. Run only on a cluster
 
-Auxiliary files needed: 
-[pysm3_map_nside2048_allStokes.fits](https://www.dropbox.com/scl/fi/gm4xuhguht5dx848d9e69/pysm3_map_nside2048_allStokes.fits?rlkey=0qga1dkj6442vxrnvku3pcrlx&dl=0)
-
-This file should be put inside `./input_files/`
-
-```
-curl -L -o input_files/pysm3_map_nside2048_allStokes.fits "<file_url>"
-```
 
 ### First let's start with timestream simulation.
 
@@ -46,34 +38,7 @@ An example SLURM script is provided that uses ARRAY JOBS to process all schedule
 ### Next: Processing and Map-making pipeline:
 
 ##### Usage:
-The ML mapmaking is a three step process. Remember to remove any previous Context dirs to avoid conflicts.
-
-```
-### Build context data
-mpirun -np $NTASKS python write_context_primecam_mpi.py $DATA_PATH
-
-### Build Map Footprint
-mpirun -np $NTASKS python write_footprint_primecam_mpi.py
-
-### Build Map
-mpirun -np $NTASKS python make_ml_map_primecam.py --config $CONFIG_FILE
-```
-
-$DATA_PATH is hierarchical and only the parent directory needs to be provided. Both absolute and relative paths are accepted.
-
-For example, to process all TODs with 200 detectors:
-```
-$DATA_PATH=./ccat_datacenter_mock/data_testmpi/deep56_data_d200/
-```
-Edit the CONFIG_FILE `config.yaml` as required. Output Maximum-Likelihood maps will be stored as defined in CONFIG_FILE. 
-
-#### Config file for ML Mapmaker:
-```
-dump-write: False #Set to True if writing maps at intermediate steps is needed
-maxiter: set to a lower value for quick testing
-```
-
-An example SLURM script is provided to process the ML map-making pipeline. This has been tested with the October 17, 2024 build of sotodlib: https://github.com/simonsobs/sotodlib
+[Work in progress]
 
 ### Converting TOAST HDF5 files to SPT3G format:
 
