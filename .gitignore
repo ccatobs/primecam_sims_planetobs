@@ -12,3 +12,5 @@ dump_logs/*
 input_files/fp_files
 
 !input_files/fp_files/fp_f280_dettable.h5
+aux/gen_schedules
+aux/params.yaml

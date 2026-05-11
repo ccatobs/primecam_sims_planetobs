@@ -54,7 +54,6 @@ import toast
 import toast.io as io
 import toast.ops
 from toast.mpi import MPI
-# from toast.instrument_coords import quat_to_xieta
 from scripts.helper_scripts.calc_groupsize import job_group_size, estimate_group_size
 from scripts.sso_scripts.sim_sso import SimSSO
 
@@ -72,8 +71,12 @@ import time as t
 # Define the global args class
 class Args:
     def __init__(self, parsed_args):   
+        # Keep input sky map False for planet sims; planet done by SSO
+        self.scan_inmap = False #False Default # Toggle to Scan Input Sky Map
+        self.sim_atm = True #True Default # Toggle to Simulate Atmosphere
+        self.sim_noise = True #True Default # Toggle to Simulate Detector Noise
+
         self.weather = 'atacama'
-        self.sim_atm = False #True Default
         self.sample_rate = 488 * u.Hz #488 Hz # or 244 Hz
         self.scan_rate_az = 0.2  * (u.deg / u.s) #on sky rate , or 1 deg/s
         #fix_rate_on_sky (bool):  If True, `scan_rate_az` is given in sky coordinates and azimuthal
@@ -85,14 +88,10 @@ class Args:
         # g3_outdir = "./g3_dataframes"
         self.h5_outdir = os.path.join(
             ".", "ccat_datacenter_mock", 
-            "data_testmpi", 
-            f"planet_WNdata_d{parsed_args.dets}"
+            "mockdata", 
+            f"planet_data_d{parsed_args.dets}"
         )
         
-        self.sim_noise = True #True Default # Toggle to Simulate Detector Noise
-
-        # Keep input sky map False for planet sims; planet done by SSO
-        self.scan_inmap = False # Toggle to Scan Input Sky Map; Default False
         self.mode = "IQU" #"IQU"
         self.input_map = "pysm3_map_nside2048_allStokes.fits"
         self.nside = 2048 #1024
