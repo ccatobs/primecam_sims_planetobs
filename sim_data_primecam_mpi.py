@@ -89,7 +89,7 @@ class Args:
         self.h5_outdir = os.path.join(
             ".", "ccat_datacenter_mock", 
             "mockdata", 
-            f"planet_data_d{parsed_args.dets}"
+            f"planet_ATMdata_d{parsed_args.dets}"
         )
         
         self.mode = "IQU" #"IQU"
@@ -232,8 +232,8 @@ def primecam_mockdata_pipeline(args, comm, focalplane, schedule, group_size):
     #Atmosphere set-up
     rand_realisation = random.randint(10000, 99999)
     tel_fov = 1.5* u.deg # 4* u.deg , changed 17.02.2025
-    # cache_dir = None
-    cache_dir = "./atm_cache"
+    cache_dir = None
+    # cache_dir = "./atm_cache"
 
     sim_atm_coarse =toast.ops.SimAtmosphere(
                     name="sim_atm_coarse",

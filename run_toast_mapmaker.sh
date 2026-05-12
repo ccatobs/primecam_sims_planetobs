@@ -9,12 +9,13 @@ echo "$(python --version)"
 ###################
 
 ### for arc10 tests
-INDIR='planet_WNdata_d100'
+DATA_DIR='mockdata'
+INDIR='planet_ATMdata_d100'
+
+MAP_DIR="fb_maps"
 OUTDIR='jupiter_maps'
 
 PARENT_DIR="ccat_datacenter_mock"
-DATA_DIR="mockdata"
-MAP_DIR="fb_maps"
 FULL_DATA_PATH="${PARENT_DIR}/${DATA_DIR}"
 FULL_MAP_PATH="${PARENT_DIR}/${MAP_DIR}"
 

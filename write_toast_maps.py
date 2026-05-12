@@ -165,22 +165,35 @@ def main():
     #=============================#
     timer.start()
 
-    ### Data Level 3: Common Mode Removal
-    log_global.info_rank(f"Common Mode Removal...", comm)
-    commonmode_filter = toast.ops.CommonModeFilter()
-    commonmode_filter.enabled = True # Toggle to False to disable
-    commonmode_filter.apply(data)
-    log_global.info_rank(f"Common Mode done in", comm, timer = timer) 
+    ### Data Level 3: Polynomial Filtering
+    polyfilter1D_enabled = False  # Toggle to False to disable
+    if polyfilter1D_enabled:
+        log_global.info_rank(f"Polynomial Filtering...", comm)
+        polyfilter1D = toast.ops.PolyFilter()
+        polyfilter1D.apply(data)
+        log_global.info_rank(f"Polynomial filtering done in", comm, timer = timer) 
+
+    ### Data Level 3a: Common Mode Removal
+    commonmode_filter_enabled = False # Toggle to False to disable
+    if commonmode_filter_enabled:
+        log_global.info_rank(f"Common Mode Removal...", comm)
+        commonmode_filter = toast.ops.CommonModeFilter()
+        commonmode_filter.apply(data)
+        log_global.info_rank(f"Common Mode done in", comm, timer = timer) 
     
-    ### Data Level 3a: Regress out 2D polynomials
-    log_global.info_rank(f"Regress out 2D polynomials...", comm)
-    poly2d_filter = toast.ops.PolyFilter2D()
-    poly2d_filter.order = 3 #3
-    poly2d_filter.enabled = True  # Toggle to False to disable
-    poly2d_filter.apply(data)
-    log_global.info_rank(f"2D polynomial filtering done in", comm, timer = timer)  
+    ### Data Level 3b: Regress out 2D polynomials
+    poly2d_filter_enabled = False  # Toggle to False to disable
+    if poly2d_filter_enabled:
+        log_global.info_rank(f"Regress out 2D polynomials...", comm)
+        poly2d_filter = toast.ops.PolyFilter2D()
+        poly2d_filter.order = 3 #3
+        poly2d_filter.apply(data)
+        log_global.info_rank(f"2D polynomial filtering done in", comm, timer = timer)  
     
-    log_global.info_rank(f"Filtering done in", comm, timer = timer_global)
+    if not (polyfilter1D_enabled or commonmode_filter_enabled or poly2d_filter_enabled):
+        log_global.info_rank(f"No filtering applied.", comm)
+    else:
+        log_global.info_rank(f"Filtering done in", comm, timer = timer_global)
     
     #=============================#
     ### Binning
@@ -190,13 +203,25 @@ def main():
     log_global.info_rank(f"Generate Pointing...", comm)
     #center = RA, DEC in DEG
     #bounds = RA_MAX, RA_MIN, DEC_MIN, DEC_MAX
-  
+    
+    ### For Jupiter only
+    res = (0.25 * u.arcmin).to(u.deg) 
+    jupiter_center = (142*u.degree,15.5*u.degree) #Jupiter 
+    # pixels_wcs_radec = toast.ops.PixelsWCS(
+    #                             name="pixels_wcs_radec",
+    #                             projection="CAR",
+    #                             auto_bounds=True,
+    #                         )
+    
     pixels_wcs_radec = toast.ops.PixelsWCS(
                                 name="pixels_wcs_radec",
                                 projection="CAR",
-                                auto_bounds=True,
-                            )
-    
+                                resolution=(res, res),
+                                center=jupiter_center, 
+                                dimensions=(np.int32(1*u.deg/res), np.int32(1*u.deg/res)),
+                                auto_bounds=False,
+                                )   
+
     pixels_wcs_radec.enabled = True
 
     det_pointing_radec = toast.ops.PointingDetectorSimple(name="det_pointing_radec", 
@@ -220,7 +245,7 @@ def main():
     binner_final = toast.ops.BinMap(name="binner_final", pixel_dist="pix_dist_final")
     binner_final.enabled = True
     ### Default: shared_mask_nonscience is flagged
-    binner_final.shared_flag_mask = 0 #No flags masked; include all data and turnarounds
+    # binner_final.shared_flag_mask = 0 #No flags masked; include all data and turnarounds
     binner_final.pixel_pointing = pixels_wcs_radec
     binner_final.stokes_weights = weights_radec
 
