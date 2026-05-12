@@ -4,13 +4,13 @@ scripts/fp_scripts/__pycache__
 .ipynb_checkpoints
 __init__.py-*
 
-*.log
-ccat_datacenter_mock/*
-logs/*
-atm_cache/*
-dump_logs/*
-input_files/fp_files
-
-!input_files/fp_files/fp_f280_dettable.h5
 aux/gen_schedules
 aux/params.yaml
+
+*.log
+ccat_datacenter_mock/*
+logs*
+atm_cache/*
+dump_logs/*
+input_files/fp_files/*
+!input_files/fp_files/fp_f280_dettable.h5

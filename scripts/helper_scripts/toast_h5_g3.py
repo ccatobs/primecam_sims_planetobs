@@ -1,10 +1,11 @@
 #Author: Ankur Dev
-#Last Updated: April 26, 2024
+#Last Updated: May 10, 2026
 #Adapted from: https://github.com/hpc4cmb/toast/blob/toast3/src/toast/scripts/toast_hdf5_to_spt3g.py
-
+#Compatibility fixes below handle SPT3G API differences for quaternion and
+#compressed timestream unit export. Tested [on Ramses] with TOAST 3.0.2 and SPT3G 1.0.1.
+#Comment out ensure_spt3g_quat_compat and ensure_spt3g_unit_compat , if using legacy SPT3G and TOAST versions
 """
 This script loads HDF5 format directories and exports to SPT3G format data.
-Example: python ../../scripts/helper_scripts/toast_h5_g3.py ./planet_WNdata_d10/sim_PCAM280_h5_Jupiter_d10/ 2>&1 | tee -a g3_wn_d10_planet.log
 """
 
 import toast
@@ -15,24 +16,51 @@ import re
 import os
 import argparse
 import numpy as np
+from astropy import units as u
 from toast.observation import default_values as defaults
 from spt3g import core as c3g
 from toast import spt3g as t3g
+import toast.spt3g.spt3g_export as t3g_export
 
 from g3_helper import export_obs_meta_mod
-from toast.qarray import to_iso_angles
+
+
+def ensure_spt3g_quat_compat():
+    """Provide the legacy SPT3G quaternion constructor expected by TOAST."""
+    if not hasattr(c3g, "quat") and hasattr(c3g, "Quat"):
+        c3g.quat = c3g.Quat
+
+
+def ensure_spt3g_unit_compat():
+    """Store compressed timestream units in a frame-compatible form."""
+    if getattr(t3g_export.export_detdata, "_primecam_units_compat", False):
+        return
+
+    export_detdata = t3g_export.export_detdata
+
+    def export_detdata_units_compat(*args, **kwargs):
+        out, gunits, compression = export_detdata(*args, **kwargs)
+        if isinstance(gunits, c3g.G3TimestreamUnits):
+            gunits = int(gunits)
+        return out, gunits, compression
+
+    export_detdata_units_compat._primecam_units_compat = True
+    t3g_export.export_detdata = export_detdata_units_compat
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-            description="Convert TOAST h5 files from primecam_sims to g3. " 
-                         + "The h5 files should be in a single parent directory."
+            description="Convert TOAST h5 files from primecam_sims to g3"
             )
-    parser.add_argument('h5_dirs', type=str, help = "Path to TOAST HDF5 parent dir")
+    parser.add_argument('h5_dirs', type=str, help = "Path to TOAST HDF5 dir")
     args = parser.parse_args()
     return(args)
 
 
 def main():
+    ensure_spt3g_quat_compat()
+    ensure_spt3g_unit_compat()
+
     log = toast.utils.Logger.get()
 
     timer = toast.timing.Timer()
@@ -66,28 +94,10 @@ def main():
                 comm=world_comm)
 
             obs = io.load_hdf5(path=h5_file_path, comm=toast_comm)
-
-            ### We add RA_DEC in Deg info here
-            radec_quats = obs.shared["boresight_radec"]
-            theta, phi, psi =  to_iso_angles(radec_quats)
-            ra_obs = np.degrees(phi)
-            dec_obs = 90 - np.degrees(theta)
-            radec_deg = np.column_stack((ra_obs, dec_obs))   # shape (nsamp, 2)
-            # Create shared array for radec_deg
-            obs.shared.create_column(
-                                        "radec_deg",
-                                        shape=radec_deg.shape,
-                                        dtype=np.float64,
-                                    )
-            obs.shared["radec_deg"][:] = radec_deg
-
             # Append the observation
             data.obs.append(obs)
             #if count >= 5:
             #    break
-            
-    if len(data.obs) == 0:
-        raise RuntimeError("No observations found! h5 files not found.")
 
     # Build up the lists of objects to export from the first observation
 
@@ -143,9 +153,9 @@ def main():
     save_spt3g_dir = os.path.join(parent_dir, basedir.replace('h5', 'g3'))
     try:
         os.makedirs(save_spt3g_dir, exist_ok=False)
-    except Exception as e:
-        #print(f"Error: {e}")
-        raise RuntimeError("Error: g3 directory already exists!")
+    except FileExistsError:
+        # Directory already exists; continue
+        log.info_rank(f"Directory already exists: {os.path.relpath(save_spt3g_dir)}", comm=world_comm)
 
     meta_exporter = export_obs_meta_mod(
      noise_models=noise_models,
