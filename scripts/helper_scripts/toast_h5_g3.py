@@ -6,6 +6,8 @@
 #Comment out ensure_spt3g_quat_compat and ensure_spt3g_unit_compat , if using legacy SPT3G and TOAST versions
 """
 This script loads HDF5 format directories and exports to SPT3G format data.
+Example run from h5_parent_dir: 
+python ../../../scripts/helper_scripts/toast_h5_g3.py h5_parent_dir 2>&1 | tee -a g3_convert_d.log
 """
 
 import toast
@@ -23,6 +25,7 @@ from toast import spt3g as t3g
 import toast.spt3g.spt3g_export as t3g_export
 
 from g3_helper import export_obs_meta_mod
+from toast.qarray import to_iso_angles
 
 
 def ensure_spt3g_quat_compat():
@@ -94,6 +97,23 @@ def main():
                 comm=world_comm)
 
             obs = io.load_hdf5(path=h5_file_path, comm=toast_comm)
+            ### We add RA_DEC in Deg info here
+            try:
+                radec_quats = obs.shared["boresight_radec"]
+                theta, phi, psi = to_iso_angles(radec_quats)
+                ra_obs = np.degrees(phi)
+                dec_obs = 90 - np.degrees(theta)
+                radec_deg = np.column_stack((ra_obs, dec_obs))   # shape (nsamp, 2)
+                # Create shared array for radec_deg
+                obs.shared.create_column(
+                                            "radec_deg",
+                                            shape=radec_deg.shape,
+                                            dtype=np.float64,
+                                        )
+                obs.shared["radec_deg"][:] = radec_deg
+            except Exception:
+                # If boresight_radec isn't present or conversion fails, continue without RA/DEC
+                log.info_rank("Could not compute radec_deg for observation; skipping.", comm=world_comm)
             # Append the observation
             data.obs.append(obs)
             #if count >= 5:

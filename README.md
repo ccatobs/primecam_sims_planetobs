@@ -15,7 +15,7 @@ Author(s): Ankur Dev (adev@uni-bonn.de)
 
 ## Workflow
 
-1. Prepare or update the SSO beam file.
+1. Prepare or update the SSO beam file (optional step, beam file included).
 2. Run the timestream simulation with `ramses_mockdata_sim.slurm`.
 3. Optionally make maps with `ramses_fbmap.slurm`.
 4. Inspect FITS map products with `scripts/plot_scripts/plot_fits_map.py`.
